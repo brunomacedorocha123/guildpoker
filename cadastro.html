@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro - Guil Poker</title>
+    <title>Cadastro - Guild Poker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -310,45 +310,32 @@
             to { transform: rotate(360deg); }
         }
         
+        /* Alertas */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
         /* Footer */
         footer {
             background: linear-gradient(to bottom, var(--red), var(--dark-red));
             border-top: 4px solid var(--gold);
             padding: 40px 5% 20px;
             margin-top: auto;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .footer-column h3 {
-            color: var(--gold);
-            margin-bottom: 15px;
-            font-size: 20px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-            padding-bottom: 5px;
-        }
-        
-        .footer-column ul {
-            list-style: none;
-        }
-        
-        .footer-column li {
-            margin-bottom: 10px;
-        }
-        
-        .footer-column a {
-            color: var(--text);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .footer-column a:hover {
-            color: var(--gold);
         }
         
         .age-warning {
@@ -380,6 +367,8 @@
         .age-warning-text {
             font-size: 16px;
             font-weight: bold;
+            display: flex;
+            flex-direction: column;
         }
         
         .age-warning-text span {
@@ -412,6 +401,11 @@
             .btn {
                 width: 100%;
             }
+            
+            .age-warning {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -419,7 +413,6 @@
     <!-- Header -->
     <header>
         <div class="logo-container">
-            <img src="logoguilpoker.png" alt="Guil Poker" class="logo">
             <div class="site-title">GUILD POKER</div>
         </div>
         
@@ -436,6 +429,8 @@
             </div>
             
             <div class="auth-content">
+                <div id="alertBox" class="alert"></div>
+                
                 <div class="step-progress">
                     <div class="step active">1</div>
                     <div class="step">2</div>
@@ -471,7 +466,7 @@
                         </div>
                         
                         <div class="form-navigation">
-                            <div></div> <!-- Espaço vazio para alinhar o próximo botão à direita -->
+                            <div></div>
                             <button type="button" class="btn btn-primary" onclick="nextStep(2)">Próximo</button>
                         </div>
                     </div>
@@ -553,7 +548,8 @@
         <div class="age-warning">
             <div class="age-warning-icon">18+</div>
             <div class="age-warning-text">
-                <span>PROIBIDO PARA MENORES DE 18 ANOS</span> | Jogue com responsabilidade
+                <span>PROIBIDO PARA MENORES DE 18 ANOS</span>
+                <span>Jogue com responsabilidade</span>
             </div>
         </div>
         
@@ -569,6 +565,19 @@
         
         // Inicializar o Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Função para mostrar alertas
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type}`;
+            alertBox.style.display = 'block';
+            
+            // Esconder o alerta após 5 segundos
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
         
         // Navegação entre os passos
         function nextStep(step) {
@@ -704,11 +713,21 @@
             return age >= 18;
         }
         
+        // Função para fazer hash da senha
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+        
         // Verificar se o email já existe
         async function checkEmailExists(email) {
             try {
                 const { data, error } = await supabase
-                    .from('users')
+                    .from('usuarios')
                     .select('email')
                     .eq('email', email);
                 
@@ -725,9 +744,9 @@
         async function checkNicknameExists(nickname) {
             try {
                 const { data, error } = await supabase
-                    .from('users')
-                    .select('nickname')
-                    .eq('nickname', nickname);
+                    .from('usuarios')
+                    .select('apelido')
+                    .eq('apelido', nickname);
                 
                 if (error) throw error;
                 
@@ -742,7 +761,7 @@
         async function checkCpfExists(cpf) {
             try {
                 const { data, error } = await supabase
-                    .from('users')
+                    .from('usuarios')
                     .select('cpf')
                     .eq('cpf', cpf);
                 
@@ -759,7 +778,6 @@
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Obter elementos do DOM
             const submitButton = document.getElementById('submitButton');
             const originalButtonText = submitButton.textContent;
             
@@ -781,21 +799,21 @@
             
             // Validações
             if (!validateAge(birthDate)) {
-                alert('Você deve ter pelo menos 18 anos para se cadastrar.');
+                showAlert('Você deve ter pelo menos 18 anos para se cadastrar.', 'danger');
                 submitButton.disabled = false;
                 submitButton.textContent = originalButtonText;
                 return;
             }
             
             if (password !== confirmPassword) {
-                alert('As senhas não coincidem!');
+                showAlert('As senhas não coincidem!', 'danger');
                 submitButton.disabled = false;
                 submitButton.textContent = originalButtonText;
                 return;
             }
             
             if (!termsAccepted) {
-                alert('Você deve aceitar os termos e condições para se cadastrar.');
+                showAlert('Você deve aceitar os termos e condições para se cadastrar.', 'danger');
                 submitButton.disabled = false;
                 submitButton.textContent = originalButtonText;
                 return;
@@ -804,7 +822,7 @@
             // Verificar se email já existe
             const emailExists = await checkEmailExists(email);
             if (emailExists) {
-                alert('Este email já está cadastrado. Por favor, use outro email.');
+                showAlert('Este email já está cadastrado. Por favor, use outro email.', 'danger');
                 submitButton.disabled = false;
                 submitButton.textContent = originalButtonText;
                 return;
@@ -813,7 +831,7 @@
             // Verificar se nickname já existe
             const nicknameExists = await checkNicknameExists(nickname);
             if (nicknameExists) {
-                alert('Este nickname já está em uso. Por favor, escolha outro.');
+                showAlert('Este nickname já está em uso. Por favor, escolha outro.', 'danger');
                 submitButton.disabled = false;
                 submitButton.textContent = originalButtonText;
                 return;
@@ -822,7 +840,7 @@
             // Verificar se CPF já existe
             const cpfExists = await checkCpfExists(cpf);
             if (cpfExists) {
-                alert('Este CPF já está cadastrado.');
+                showAlert('Este CPF já está cadastrado.', 'danger');
                 submitButton.disabled = false;
                 submitButton.textContent = originalButtonText;
                 return;
@@ -831,35 +849,45 @@
             // Gerar ID único
             const userId = generateUserId();
             
+            // Fazer hash da senha
+            const hashedPassword = await hashPassword(password);
+            
             // Preparar dados para inserção
             const userData = {
                 id: userId,
-                first_name: firstName,
-                last_name: lastName,
-                birth_date: birthDate,
+                nome: firstName,
+                sobrenome: lastName,
                 cpf: cpf,
-                address: address,
                 email: email,
-                nickname: nickname,
-                password: password, // Em produção, isso deve ser hasheado antes
-                created_at: new Date().toISOString()
+                endereco: address,
+                data_nascimento: birthDate,
+                apelido: nickname,
+                senha_hash: hashedPassword,
+                status: 'ativo'
             };
             
             try {
                 // Inserir dados no Supabase
                 const { data, error } = await supabase
-                    .from('users')
+                    .from('usuarios')
                     .insert([userData]);
                 
                 if (error) throw error;
                 
-                // Sucesso
-                alert(`Cadastro realizado com sucesso! Seu ID de jogador é: ${userId}`);
+                // Criar registro na tabela de saldos
+                const { error: saldoError } = await supabase
+                    .from('saldos_usuarios')
+                    .insert([{ id_usuario: userId }]);
                 
-                // Redirecionar para a página de login ou início após 2 segundos
+                if (saldoError) throw saldoError;
+                
+                // Sucesso
+                showAlert(`Cadastro realizado com sucesso! Seu ID de jogador é: ${userId}`, 'success');
+                
+                // Redirecionar para a página de login ou início após 3 segundos
                 setTimeout(() => {
                     window.location.href = 'index.html';
-                }, 2000);
+                }, 3000);
                 
             } catch (error) {
                 console.error('Erro ao cadastrar:', error);
@@ -868,16 +896,16 @@
                 if (error.code === '23505') {
                     const detail = error.details ? error.details.toLowerCase() : '';
                     if (detail.includes('email')) {
-                        alert('Este email já está cadastrado. Por favor, use outro email.');
-                    } else if (detail.includes('nickname')) {
-                        alert('Este nickname já está em uso. Por favor, escolha outro.');
+                        showAlert('Este email já está cadastrado. Por favor, use outro email.', 'danger');
+                    } else if (detail.includes('apelido')) {
+                        showAlert('Este nickname já está em uso. Por favor, escolha outro.', 'danger');
                     } else if (detail.includes('cpf')) {
-                        alert('Este CPF já está cadastrado.');
+                        showAlert('Este CPF já está cadastrado.', 'danger');
                     } else {
-                        alert('Erro ao realizar cadastro. Algum dado já está em uso.');
+                        showAlert('Erro ao realizar cadastro. Algum dado já está em uso.', 'danger');
                     }
                 } else {
-                    alert('Erro ao realizar cadastro. Tente novamente.');
+                    showAlert('Erro ao realizar cadastro. Tente novamente.', 'danger');
                 }
                 
                 // Reativar botão
