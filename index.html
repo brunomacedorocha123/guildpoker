@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guil Poker - Medieval Poker Experience</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --red: #8b0000;
+            --dark-red: #6d0000;
+            --black: #1a1a1a;
+            --dark-gray: #2c2c2c;
+            --light-gray: #444;
+            --text: #f1f1f1;
+            --parchment: #f5e6ca;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--black);
+            color: var(--text);
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23222" width="100" height="100"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(to bottom, var(--dark-red), var(--red));
+            border-bottom: 4px solid var(--gold);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 60px;
+            width: auto;
+            margin-right: 15px;
+            filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
+        }
+        
+        .site-title {
+            font-family: 'Times New Roman', serif;
+            font-weight: bold;
+            font-size: 28px;
+            color: var(--gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            letter-spacing: 1px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        
+        nav li {
+            margin: 0 5px;
+            position: relative;
+        }
+        
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+            border-radius: 4px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        nav a:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--gold);
+        }
+        
+        /* Submenu Styles */
+        .submenu {
+            display: none;
+            position: absolute;
+            background: linear-gradient(to bottom, var(--red), var(--dark-red));
+            border: 2px solid var(--gold);
+            border-radius: 4px;
+            min-width: 200px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            top: 100%;
+            left: 0;
+        }
+        
+        .submenu li {
+            margin: 0;
+        }
+        
+        .submenu a {
+            padding: 12px 15px;
+            border-radius: 0;
+            white-space: nowrap;
+        }
+        
+        .has-submenu:hover .submenu {
+            display: block;
+        }
+        
+        .submenu-arrow {
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        
+        .user-area {
+            display: flex;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        
+        .btn-login {
+            background-color: var(--gold);
+            color: var(--black);
+        }
+        
+        .btn-login:hover {
+            background-color: #c19b2e;
+        }
+        
+        .btn-register {
+            background-color: var(--dark-gray);
+            color: var(--text);
+        }
+        
+        .btn-register:hover {
+            background-color: #333;
+        }
+        
+        .user-logged {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--dark-gray);
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--gold);
+            font-size: 20px;
+        }
+        
+        .user-info {
+            margin-right: 15px;
+        }
+        
+        .user-nickname {
+            font-weight: bold;
+            color: var(--gold);
+        }
+        
+        .user-id {
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .user-coins {
+            display: flex;
+            align-items: center;
+            margin-top: 3px;
+        }
+        
+        .coins, .points {
+            margin-right: 15px;
+            font-size: 14px;
+        }
+        
+        .coins i, .points i {
+            color: var(--gold);
+            margin-right: 5px;
+        }
+        
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 30px 5%;
+        }
+        
+        .content-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .content-header h1 {
+            font-family: 'Times New Roman', serif;
+            color: var(--gold);
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            margin-bottom: 10px;
+        }
+        
+        .content-header p {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(to bottom right, var(--dark-gray), var(--light-gray));
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+        
+        .feature-card h3 {
+            color: var(--gold);
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+        
+        .promo-banner {
+            background: linear-gradient(to right, var(--dark-red), var(--red));
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .promo-banner h2 {
+            color: var(--gold);
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        
+        .btn-promo {
+            background-color: var(--gold);
+            color: var(--black);
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-promo:hover {
+            background-color: #c19b2e;
+            transform: scale(1.05);
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(to bottom, var(--red), var(--dark-red));
+            border-top: 4px solid var(--gold);
+            padding: 40px 5% 20px;
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-column h3 {
+            color: var(--gold);
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding-bottom: 5px;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-column a {
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-column a:hover {
+            color: var(--gold);
+        }
+        
+        .age-warning {
+            background-color: var(--dark-red);
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .age-warning-icon {
+            font-size: 32px;
+            color: white;
+            background-color: var(--red);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .age-warning-text {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .age-warning-text span {
+            color: var(--gold);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo-container {
+                margin-bottom: 15px;
+            }
+            
+            nav ul {
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            
+            .user-area {
+                justify-content: center;
+            }
+            
+            .submenu {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .user-logged {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .user-info {
+                margin: 10px 0;
+            }
+            
+            .user-coins {
+                justify-content: center;
+            }
+            
+            .feature-card {
+                padding: 15px;
+            }
+            
+            .has-submenu {
+                position: static;
+            }
+            
+            .submenu {
+                position: static;
+                display: none;
+                width: 100%;
+                transform: none;
+                box-shadow: none;
+                border: none;
+                border-top: 1px solid var(--gold);
+                border-radius: 0;
+            }
+            
+            .submenu.active {
+                display: block;
+            }
+            
+            .submenu-toggle {
+                display: inline-block;
+                margin-left: 5px;
+                cursor: pointer;
+            }
+            
+            .age-warning {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            nav li {
+                margin: 5px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .content-header h1 {
+                font-size: 28px;
+            }
+            
+            .promo-banner {
+                padding: 20px;
+            }
+            
+            .promo-banner h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <img src="logoguilpoker.png" alt="Guil Poker" class="logo">
+            <div class="site-title">GUILD POKER</div>
+        </div>
+        
+        <nav>
+            <ul>
+                <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="#"><i class="fas fa-trophy"></i> Torneios</a></li>
+                <li><a href="#"><i class="fas fa-dice"></i> SNG</a></li>
+                
+                <!-- Cash Game com submenu -->
+                <li class="has-submenu">
+                    <a href="#"><i class="fas fa-coins"></i> Cash Game <i class="fas fa-chevron-down submenu-arrow"></i></a>
+                    <ul class="submenu">
+                        <li><a href="#"><i class="fas fa-chess"></i> NLH</a></li>
+                        <li><a href="#"><i class="fas fa-chess-knight"></i> PLO5</a></li>
+                        <li><a href="#"><i class="fas fa-chess-queen"></i> PLO6</a></li>
+                    </ul>
+                </li>
+                
+                <li><a href="#"><i class="fas fa-gift"></i> Promoções</a></li>
+                
+                <!-- Transações com submenu -->
+                <li class="has-submenu">
+                    <a href="#"><i class="fas fa-exchange-alt"></i> Transações <i class="fas fa-chevron-down submenu-arrow"></i></a>
+                    <ul class="submenu">
+                        <li><a href="#"><i class="fas fa-download"></i> Depósito</a></li>
+                        <li><a href="#"><i class="fas fa-upload"></i> Saque</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="user-area">
+            <!-- Estado não logado -->
+            <div class="not-logged">
+                <button class="btn btn-login">Login</button>
+                <button class="btn btn-register">Cadastrar-se</button>
+            </div>
+            
+            <!-- Estado logado (comentado para alternância) -->
+            <!--
+            <div class="user-logged">
+                <div class="user-avatar">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="user-info">
+                    <div class="user-nickname">SirPokerAlot</div>
+                    <div class="user-id">ID: 123456</div>
+                    <div class="user-coins">
+                        <div class="coins"><i class="fas fa-coins"></i> 12.350</div>
+                        <div class="points"><i class="fas fa-star"></i> 5.200</div>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <button class="btn btn-login">Perfil</button>
+                    <button class="btn btn-register" id="logout-btn">Sair</button>
+                </div>
+            </div>
+            -->
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <div class="content-header">
+            <h1>Bem-vindo à Guild Poker</h1>
+            <p>Entre no mundo medieval do poker onde cavaleiros e damas testam sua habilidade e estratégia em mesas reais. Participe de torneios épicos e conquiste seu lugar no hall dos lendários!</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3>Torneios Épicos</h3>
+                <p>Participe de torneios com premiações reais e prove seu valor no campo de batalha do poker.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3>Cash Games Lucrativos</h3>
+                <p>Jogue em mesas de cash game com diferentes limites e aumente seu tesouro.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h3>Variedade de Jogos</h3>
+                <p>NLH, PLO5, PLO6 e muitas outras variantes para todos os tipos de estrategistas.</p>
+            </div>
+        </div>
+        
+        <div class="promo-banner">
+            <h2>TORNEIO DO TRONO - 100.000 EM PRÊMIOS</h2>
+            <p>Participe do maior torneio do ano e dispute o direito de sentar no Trono de Ouro!</p>
+            <p>Inscrições abertas até 30 de Setembro</p>
+            <a href="#" class="btn-promo">INSCREVA-SE AGORA</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Segurança Real</h3>
+                <p>Protegemos seu reino com criptografia de última geração e fair play garantido.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-medal"></i>
+                </div>
+                <h3>Programa de Lealdade</h3>
+                <p>Seja recompensado por sua lealdade ao reino com pontos exclusivos e benefícios.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Comunidade Real</h3>
+                <p>Junte-se a milhares de jogadores em um reino feito por entusiastas do poker.</p>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Informações</h3>
+                <ul>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos e Condições</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Contato</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Suporte</h3>
+                <ul>
+                    <li><a href="#">Sobre Nós</a></li>
+                    <li><a href="#">Jogo Responsável</a></li>
+                    <li><a href="#">Suporte</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Aviso de idade -->
+        <div class="age-warning">
+            <div class="age-warning-icon">18+</div>
+            <div class="age-warning-text">
+                <span>PROIBIDO PARA MENORES DE 18 ANOS</span> | Jogue com responsabilidade
+            </div>
+        </div>
+        
+        <div class="copyright">
+            &copy; 2023 Guild Poker - Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <script>
+        // Funcionalidade simples para alternar entre estados de login
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginBtn = document.querySelector('.btn-login');
+            const registerBtn = document.querySelector('.btn-register');
+            const userArea = document.querySelector('.user-area');
+            
+            if (loginBtn && registerBtn) {
+                loginBtn.addEventListener('click', function() {
+                    userArea.innerHTML = `
+                        <div class="user-logged">
+                            <div class="user-avatar">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="user-info">
+                                <div class="user-nickname">SirPokerAlot</div>
+                                <div class="user-id">ID: 123456</div>
+                                <div class="user-coins">
+                                    <div class="coins"><i class="fas fa-coins"></i> 12.350</div>
+                                    <div class="points"><i class="fas fa-star"></i> 5.200</div>
+                                </div>
+                            </div>
+                            <div class="user-actions">
+                                <button class="btn btn-login">Perfil</button>
+                                <button class="btn btn-register" id="logout-btn">Sair</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Adiciona evento de logout
+                    document.getElementById('logout-btn').addEventListener('click', function() {
+                        location.reload();
+                    });
+                });
+            }
+
+            // Funcionalidade para submenus em dispositivos móveis
+            if (window.innerWidth <= 768) {
+                const submenuToggles = document.querySelectorAll('.has-submenu > a');
+                
+                submenuToggles.forEach(toggle => {
+                    toggle.innerHTML += '<span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>';
+                    
+                    toggle.addEventListener('click', function(e) {
+                        if (e.target.classList.contains('submenu-toggle') || e.target.parentElement.classList.contains('submenu-toggle')) {
+                            e.preventDefault();
+                            const submenu = this.nextElementSibling;
+                            submenu.classList.toggle('active');
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
