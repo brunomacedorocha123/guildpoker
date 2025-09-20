@@ -139,6 +139,9 @@
             font-weight: bold;
             transition: all 0.3s;
             margin-left: 10px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
         
         .btn-login {
@@ -493,7 +496,7 @@
     <!-- Header -->
     <header>
         <div class="logo-container">
-            <img src="logoguilpoker.png" alt="Guil Poker" class="logo">
+            <img src="logoguilpoker.png" alt="Guild Poker" class="logo">
             <div class="site-title">GUILD POKER</div>
         </div>
         
@@ -530,7 +533,7 @@
             <!-- Estado não logado -->
             <div class="not-logged">
                 <button class="btn btn-login">Login</button>
-                <button class="btn btn-register">Cadastrar-se</button>
+                <a href="cadastro.html" class="btn btn-register">Cadastrar-se</a>
             </div>
             
             <!-- Estado logado (comentado para alternância) -->
@@ -593,7 +596,7 @@
             <h2>TORNEIO DO TRONO - 100.000 EM PRÊMIOS</h2>
             <p>Participe do maior torneio do ano e dispute o direito de sentar no Trono de Ouro!</p>
             <p>Inscrições abertas até 30 de Setembro</p>
-            <a href="#" class="btn-promo">INSCREVA-SE AGORA</a>
+            <a href="cadastro.html" class="btn-promo">INSCREVA-SE AGORA</a>
         </div>
         
         <div class="features">
@@ -666,32 +669,46 @@
             const registerBtn = document.querySelector('.btn-register');
             const userArea = document.querySelector('.user-area');
             
-            if (loginBtn && registerBtn) {
+            // Verificar se já está logado (simulação)
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (isLoggedIn) {
+                showLoggedInState();
+            }
+            
+            if (loginBtn && !isLoggedIn) {
                 loginBtn.addEventListener('click', function() {
-                    userArea.innerHTML = `
-                        <div class="user-logged">
-                            <div class="user-avatar">
-                                <i class="fas fa-crown"></i>
-                            </div>
-                            <div class="user-info">
-                                <div class="user-nickname">SirPokerAlot</div>
-                                <div class="user-id">ID: 123456</div>
-                                <div class="user-coins">
-                                    <div class="coins"><i class="fas fa-coins"></i> 12.350</div>
-                                    <div class="points"><i class="fas fa-star"></i> 5.200</div>
-                                </div>
-                            </div>
-                            <div class="user-actions">
-                                <button class="btn btn-login">Perfil</button>
-                                <button class="btn btn-register" id="logout-btn">Sair</button>
+                    // Simulação de login
+                    localStorage.setItem('isLoggedIn', 'true');
+                    showLoggedInState();
+                });
+            }
+            
+            function showLoggedInState() {
+                userArea.innerHTML = `
+                    <div class="user-logged">
+                        <div class="user-avatar">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="user-info">
+                            <div class="user-nickname">SirPokerAlot</div>
+                            <div class="user-id">ID: 123456</div>
+                            <div class="user-coins">
+                                <div class="coins"><i class="fas fa-coins"></i> 12.350</div>
+                                <div class="points"><i class="fas fa-star"></i> 5.200</div>
                             </div>
                         </div>
-                    `;
-                    
-                    // Adiciona evento de logout
-                    document.getElementById('logout-btn').addEventListener('click', function() {
-                        location.reload();
-                    });
+                        <div class="user-actions">
+                            <button class="btn btn-login">Perfil</button>
+                            <button class="btn btn-register" id="logout-btn">Sair</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Adiciona evento de logout
+                document.getElementById('logout-btn').addEventListener('click', function() {
+                    localStorage.setItem('isLoggedIn', 'false');
+                    location.reload();
                 });
             }
 
