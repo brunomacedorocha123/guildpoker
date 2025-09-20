@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Guild Poker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --red: #8b0000;
+            --dark-red: #6d0000;
+            --black: #1a1a1a;
+            --dark-gray: #2c2c2c;
+            --light-gray: #444;
+            --text: #f1f1f1;
+            --parchment: #f5e6ca;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--black);
+            color: var(--text);
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23222" width="100" height="100"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(to bottom, var(--dark-red), var(--red));
+            border-bottom: 4px solid var(--gold);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 60px;
+            width: auto;
+            margin-right: 15px;
+            filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
+        }
+        
+        .site-title {
+            font-family: 'Times New Roman', serif;
+            font-weight: bold;
+            font-size: 28px;
+            color: var(--gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            letter-spacing: 1px;
+        }
+        
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 30px 5%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .auth-container {
+            width: 100%;
+            max-width: 500px;
+            background: linear-gradient(to bottom right, var(--dark-gray), var(--light-gray));
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .auth-header {
+            background: linear-gradient(to right, var(--dark-red), var(--red));
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .auth-header h1 {
+            color: var(--gold);
+            font-family: 'Times New Roman', serif;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        
+        .auth-content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gold);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: var(--dark-gray);
+            border: 2px solid #555;
+            border-radius: 5px;
+            color: var(--text);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
+        }
+        
+        .password-input {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 42px;
+            color: var(--light-gray);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .password-toggle:hover {
+            color: var(--gold);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 16px;
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background-color: var(--gold);
+            color: var(--black);
+        }
+        
+        .btn-primary:hover {
+            background-color: #c19b2e;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            margin-top: 10px;
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--gold);
+            color: var(--black);
+        }
+        
+        .form-text {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .login-links {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .login-links a {
+            color: var(--gold);
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .login-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: #555;
+        }
+        
+        .divider span {
+            padding: 0 15px;
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: var(--black);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(to bottom, var(--red), var(--dark-red));
+            border-top: 4px solid var(--gold);
+            padding: 40px 5% 20px;
+            margin-top: auto;
+        }
+        
+        .age-warning {
+            background-color: var(--dark-red);
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .age-warning-icon {
+            font-size: 32px;
+            color: white;
+            background-color: var(--red);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .age-warning-text {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .age-warning-text span {
+            color: var(--gold);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .auth-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <img src="logoguilpoker.png" alt="Guild Poker" class="logo">
+            <div class="site-title">GUILD POKER</div>
+        </div>
+        
+        <nav>
+            <a href="index.html" class="btn btn-outline">Voltar ao Início</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1><i class="fas fa-door-open"></i> Acessar a Guild</h1>
+            </div>
+            
+            <div class="auth-content">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">E-mail ou Nickname</label>
+                        <input type="text" class="form-control" id="loginEmail" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">Senha</label>
+                        <div class="password-input">
+                            <input type="password" class="form-control" id="loginPassword" required>
+                            <span class="password-toggle" onclick="togglePassword('loginPassword')">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Entrar</button>
+                        <a href="cadastro.html" class="btn btn-outline">Criar Nova Conta</a>
+                    </div>
+                    
+                    <div class="login-links">
+                        <a href="#">Esqueci minha senha</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="age-warning">
+            <div class="age-warning-icon">18+</div>
+            <div class="age-warning-text">
+                <span>PROIBIDO PARA MENORES DE 18 ANOS</span> | Jogue com responsabilidade
+            </div>
+        </div>
+        
+        <div class="copyright">
+            &copy; 2023 Guild Poker - Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <script>
+        // Configuração do Supabase (use as mesmas credenciais da página de cadastro)
+        const SUPABASE_URL = 'https://qrybzrbrevbwnsxkwejh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5ODUyNzcsImV4cCI6MjAyMzU2MTI3N30.5v3vRz3i8wLqF4LtJw4J8Jk8vQ7nZ7Z0Qxqj7J7Z7Z0';
+        
+        // Inicializar o Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Alternar visibilidade da senha
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        
+        // Enviar formulário de login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Obter elementos do DOM
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            
+            // Desativar botão para evitar múltiplos envios
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner"></span> Entrando...';
+            
+            // Coletar dados do formulário
+            const emailOrNickname = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                // Verificar se é email ou nickname
+                const isEmail = emailOrNickname.includes('@');
+                
+                // Buscar usuário por email ou nickname
+                const { data: users, error: searchError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq(isEmail ? 'email' : 'nickname', emailOrNickname);
+                
+                if (searchError) throw searchError;
+                
+                if (users.length === 0) {
+                    alert('Usuário não encontrado. Verifique suas credenciais.');
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                    return;
+                }
+                
+                const user = users[0];
+                
+                // Verificar senha (em produção, isso deve usar hashing!)
+                if (user.password === password) {
+                    // Login bem-sucedido
+                    alert(`Bem-vindo de volta, ${user.nickname}!`);
+                    
+                    // Salvar sessão do usuário
+                    localStorage.setItem('user', JSON.stringify(user));
+                    
+                    // Redirecionar para a página principal
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Senha incorreta. Tente novamente.');
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                }
+                
+            } catch (error) {
+                console.error('Erro no login:', error);
+                alert('Erro ao fazer login. Tente novamente.');
+                
+                // Reativar botão
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+            }
+        });
+        
+        // Verificar se já está logado
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            if (user) {
+                // Se o usuário já está logado, redirecionar para a página principal
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
