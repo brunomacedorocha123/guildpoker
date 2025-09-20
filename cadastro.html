@@ -726,13 +726,18 @@
     // Verificar se o email já existe
     async function checkEmailExists(email) {
         try {
+            console.log('Verificando se email existe:', email);
             const { data, error } = await supabase
                 .from('usuarios')
                 .select('email')
                 .eq('email', email);
             
-            if (error) throw error;
+            if (error) {
+                console.error('Erro ao verificar email:', error);
+                throw error;
+            }
             
+            console.log('Resultado verificação email:', data);
             return data && data.length > 0;
         } catch (error) {
             console.error('Erro ao verificar email:', error);
@@ -743,13 +748,18 @@
     // Verificar se o nickname já existe
     async function checkNicknameExists(nickname) {
         try {
+            console.log('Verificando se nickname existe:', nickname);
             const { data, error } = await supabase
                 .from('usuarios')
                 .select('apelido')
                 .eq('apelido', nickname);
             
-            if (error) throw error;
+            if (error) {
+                console.error('Erro ao verificar nickname:', error);
+                throw error;
+            }
             
+            console.log('Resultado verificação nickname:', data);
             return data && data.length > 0;
         } catch (error) {
             console.error('Erro ao verificar nickname:', error);
@@ -760,13 +770,18 @@
     // Verificar se o CPF já existe
     async function checkCpfExists(cpf) {
         try {
+            console.log('Verificando se CPF existe:', cpf);
             const { data, error } = await supabase
                 .from('usuarios')
                 .select('cpf')
                 .eq('cpf', cpf);
             
-            if (error) throw error;
+            if (error) {
+                console.error('Erro ao verificar CPF:', error);
+                throw error;
+            }
             
+            console.log('Resultado verificação CPF:', data);
             return data && data.length > 0;
         } catch (error) {
             console.error('Erro ao verificar CPF:', error);
@@ -797,6 +812,11 @@
         const confirmPassword = document.getElementById('confirmPassword').value;
         const termsAccepted = document.getElementById('termsCheck').checked;
         
+        console.log('Dados do formulário:', {
+            firstName, lastName, birthDate, cpf, address, email, nickname,
+            passwordLength: password.length, termsAccepted
+        });
+        
         // Validações
         if (!validateAge(birthDate)) {
             showAlert('Você deve ter pelo menos 18 anos para se cadastrar.', 'danger');
@@ -820,27 +840,51 @@
         }
         
         // Verificar se email já existe
-        const emailExists = await checkEmailExists(email);
-        if (emailExists) {
-            showAlert('Este email já está cadastrado. Por favor, use outro email.', 'danger');
+        try {
+            const emailExists = await checkEmailExists(email);
+            if (emailExists) {
+                showAlert('Este email já está cadastrado. Por favor, use outro email.', 'danger');
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                return;
+            }
+        } catch (error) {
+            console.error('Erro na verificação de email:', error);
+            showAlert('Erro ao verificar email. Tente novamente.', 'danger');
             submitButton.disabled = false;
             submitButton.textContent = originalButtonText;
             return;
         }
         
         // Verificar se nickname já existe
-        const nicknameExists = await checkNicknameExists(nickname);
-        if (nicknameExists) {
-            showAlert('Este nickname já está em uso. Por favor, escolha outro.', 'danger');
+        try {
+            const nicknameExists = await checkNicknameExists(nickname);
+            if (nicknameExists) {
+                showAlert('Este nickname já está em uso. Por favor, escolha outro.', 'danger');
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                return;
+            }
+        } catch (error) {
+            console.error('Erro na verificação de nickname:', error);
+            showAlert('Erro ao verificar nickname. Tente novamente.', 'danger');
             submitButton.disabled = false;
             submitButton.textContent = originalButtonText;
             return;
         }
         
         // Verificar se CPF já existe
-        const cpfExists = await checkCpfExists(cpf);
-        if (cpfExists) {
-            showAlert('Este CPF já está cadastrado.', 'danger');
+        try {
+            const cpfExists = await checkCpfExists(cpf);
+            if (cpfExists) {
+                showAlert('Este CPF já está cadastrado.', 'danger');
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                return;
+            }
+        } catch (error) {
+            console.error('Erro na verificação de CPF:', error);
+            showAlert('Erro ao verificar CPF. Tente novamente.', 'danger');
             submitButton.disabled = false;
             submitButton.textContent = originalButtonText;
             return;
@@ -850,7 +894,17 @@
         const userId = generateUserId();
         
         // Fazer hash da senha
-        const hashedPassword = await hashPassword(password);
+        let hashedPassword;
+        try {
+            hashedPassword = await hashPassword(password);
+            console.log('Senha hash gerada com sucesso');
+        } catch (error) {
+            console.error('Erro ao gerar hash da senha:', error);
+            showAlert('Erro ao processar senha. Tente novamente.', 'danger');
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+            return;
+        }
         
         // Preparar dados para inserção
         const userData = {
@@ -866,20 +920,33 @@
             status: 'ativo'
         };
         
+        console.log('Dados preparados para inserção:', userData);
+        
         try {
             // Inserir dados no Supabase
+            console.log('Inserindo usuário na tabela usuarios...');
             const { data, error } = await supabase
                 .from('usuarios')
                 .insert([userData]);
             
-            if (error) throw error;
+            if (error) {
+                console.error('Erro ao inserir usuário:', error);
+                throw error;
+            }
+            
+            console.log('Usuário inserido com sucesso, criando saldo...');
             
             // Criar registro na tabela de saldos
             const { error: saldoError } = await supabase
                 .from('saldos_usuarios')
                 .insert([{ id_usuario: userId }]);
             
-            if (saldoError) throw saldoError;
+            if (saldoError) {
+                console.error('Erro ao criar saldo:', saldoError);
+                throw saldoError;
+            }
+            
+            console.log('Cadastro realizado com sucesso! ID:', userId);
             
             // Sucesso
             showAlert(`Cadastro realizado com sucesso! Seu ID de jogador é: ${userId}`, 'success');
@@ -890,7 +957,7 @@
             }, 3000);
             
         } catch (error) {
-            console.error('Erro ao cadastrar:', error);
+            console.error('Erro completo ao cadastrar:', error);
             
             // Verificar se é erro de duplicidade
             if (error.code === '23505') {
@@ -904,8 +971,10 @@
                 } else {
                     showAlert('Erro ao realizar cadastro. Algum dado já está em uso.', 'danger');
                 }
+            } else if (error.code === '42501') {
+                showAlert('Permissão negada. Verifique as políticas de segurança do banco de dados.', 'danger');
             } else {
-                showAlert('Erro ao realizar cadastro. Tente novamente.', 'danger');
+                showAlert(`Erro ao realizar cadastro: ${error.message}`, 'danger');
             }
             
             // Reativar botão
