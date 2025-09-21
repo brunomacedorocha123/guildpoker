@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guil Poker - Medieval Poker Experience</title>
+    <title>Guild Poker - Medieval Poker Experience</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --gold: #d4af37;
@@ -160,59 +161,6 @@
         
         .btn-register:hover {
             background-color: #333;
-        }
-        
-        .user-logged {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--dark-gray);
-            margin-right: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid var(--gold);
-            font-size: 20px;
-        }
-        
-        .user-info {
-            margin-right: 15px;
-        }
-        
-        .user-nickname {
-            font-weight: bold;
-            color: var(--gold);
-        }
-        
-        .user-id {
-            font-size: 12px;
-            color: #ccc;
-        }
-        
-        .user-coins {
-            display: flex;
-            align-items: center;
-            margin-top: 3px;
-        }
-        
-        .coins, .points {
-            margin-right: 15px;
-            font-size: 14px;
-        }
-        
-        .coins i, .points i {
-            color: var(--gold);
-            margin-right: 5px;
         }
         
         /* Main Content */
@@ -419,19 +367,6 @@
         }
         
         @media (max-width: 768px) {
-            .user-logged {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .user-info {
-                margin: 10px 0;
-            }
-            
-            .user-coins {
-                justify-content: center;
-            }
-            
             .feature-card {
                 padding: 15px;
             }
@@ -532,30 +467,9 @@
         <div class="user-area">
             <!-- Estado não logado -->
             <div class="not-logged">
-                <button class="btn btn-login">Login</button>
+                <button class="btn btn-login" onclick="window.location.href='login.html'">Login</button>
                 <a href="cadastro.html" class="btn btn-register">Cadastrar-se</a>
             </div>
-            
-            <!-- Estado logado (comentado para alternância) -->
-            <!--
-            <div class="user-logged">
-                <div class="user-avatar">
-                    <i class="fas fa-crown"></i>
-                </div>
-                <div class="user-info">
-                    <div class="user-nickname">SirPokerAlot</div>
-                    <div class="user-id">ID: 123456</div>
-                    <div class="user-coins">
-                        <div class="coins"><i class="fas fa-coins"></i> 12.350</div>
-                        <div class="points"><i class="fas fa-star"></i> 5.200</div>
-                    </div>
-                </div>
-                <div class="user-actions">
-                    <button class="btn btn-login">Perfil</button>
-                    <button class="btn btn-register" id="logout-btn">Sair</button>
-                </div>
-            </div>
-            -->
         </div>
     </header>
     
@@ -663,72 +577,33 @@
     </footer>
 
     <script>
-        // Funcionalidade simples para alternar entre estados de login
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginBtn = document.querySelector('.btn-login');
-            const registerBtn = document.querySelector('.btn-register');
-            const userArea = document.querySelector('.user-area');
-            
-            // Verificar se já está logado (simulação)
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            
-            if (isLoggedIn) {
-                showLoggedInState();
-            }
-            
-            if (loginBtn && !isLoggedIn) {
-                loginBtn.addEventListener('click', function() {
-                    // Simulação de login
-                    localStorage.setItem('isLoggedIn', 'true');
-                    showLoggedInState();
-                });
-            }
-            
-            function showLoggedInState() {
-                userArea.innerHTML = `
-                    <div class="user-logged">
-                        <div class="user-avatar">
-                            <i class="fas fa-crown"></i>
-                        </div>
-                        <div class="user-info">
-                            <div class="user-nickname">SirPokerAlot</div>
-                            <div class="user-id">ID: 123456</div>
-                            <div class="user-coins">
-                                <div class="coins"><i class="fas fa-coins"></i> 12.350</div>
-                                <div class="points"><i class="fas fa-star"></i> 5.200</div>
-                            </div>
-                        </div>
-                        <div class="user-actions">
-                            <button class="btn btn-login">Perfil</button>
-                            <button class="btn btn-register" id="logout-btn">Sair</button>
-                        </div>
-                    </div>
-                `;
-                
-                // Adiciona evento de logout
-                document.getElementById('logout-btn').addEventListener('click', function() {
-                    localStorage.setItem('isLoggedIn', 'false');
-                    location.reload();
-                });
-            }
+    // Verificar se usuário já está logado e redirecionar se necessário
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar se há um usuário logado
+        const userData = localStorage.getItem('pokerUser');
+        
+        if (userData) {
+            // Se já estiver logado, redirecionar para o dashboard
+            window.location.href = 'dashboard.html';
+        }
 
-            // Funcionalidade para submenus em dispositivos móveis
-            if (window.innerWidth <= 768) {
-                const submenuToggles = document.querySelectorAll('.has-submenu > a');
+        // Funcionalidade para submenus em dispositivos móveis
+        if (window.innerWidth <= 768) {
+            const submenuToggles = document.querySelectorAll('.has-submenu > a');
+            
+            submenuToggles.forEach(toggle => {
+                toggle.innerHTML += '<span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>';
                 
-                submenuToggles.forEach(toggle => {
-                    toggle.innerHTML += '<span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>';
-                    
-                    toggle.addEventListener('click', function(e) {
-                        if (e.target.classList.contains('submenu-toggle') || e.target.parentElement.classList.contains('submenu-toggle')) {
-                            e.preventDefault();
-                            const submenu = this.nextElementSibling;
-                            submenu.classList.toggle('active');
-                        }
-                    });
+                toggle.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('submenu-toggle') || e.target.parentElement.classList.contains('submenu-toggle')) {
+                        e.preventDefault();
+                        const submenu = this.nextElementSibling;
+                        submenu.classList.toggle('active');
+                    }
                 });
-            }
-        });
-    </script>
+            });
+        }
+    });
+</script>
 </body>
 </html>
