@@ -206,7 +206,7 @@
         </div>
     </div>
 
-    <script>
+<script>
     // Variáveis globais
     let supabase = null;
     
@@ -218,10 +218,10 @@
     function initializeSupabase() {
         try {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log('Supabase inicializado com sucesso');
+            console.log('✅ Supabase inicializado com sucesso');
             return true;
         } catch (error) {
-            console.error('Erro ao inicializar Supabase:', error);
+            console.error('❌ Erro ao inicializar Supabase:', error);
             showAlert('Erro de configuração do sistema.', 'danger');
             return false;
         }
@@ -253,64 +253,75 @@
     
     // Função para fazer hash da senha (DEVE SER IDÊNTICA À DO CADASTRO)
     async function hashPassword(password) {
-        // Converter a senha para ArrayBuffer
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password);
-        
-        // Fazer hash usando SHA-256
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        
-        // Converter ArrayBuffer para string hexadecimal
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        return hashHex;
+        try {
+            // Converter a senha para ArrayBuffer
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            
+            // Fazer hash usando SHA-256
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            
+            // Converter ArrayBuffer para string hexadecimal
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            console.log('🔐 Hash gerado:', hashHex);
+            return hashHex;
+        } catch (error) {
+            console.error('❌ Erro ao fazer hash da senha:', error);
+            throw error;
+        }
     }
     
     // Fazer login
     async function loginUser(email, password) {
         try {
-            console.log('Tentando fazer login com:', email);
+            console.log('🔑 Tentando login com:', email);
             
-            // Fazer hash da senha (EXATAMENTE IGUAL AO CADASTRO)
+            // Fazer hash da senha
             const hashedPassword = await hashPassword(password);
-            console.log('Hash da senha:', hashedPassword);
             
-            // Primeiro: buscar usuário por email ou apelido
+            // BUSCAR USUÁRIO no banco de dados
+            console.log('🔍 Buscando usuário no banco...');
             const { data: users, error: searchError } = await supabase
                 .from('usuarios')
                 .select('*')
                 .or(`email.eq.${email},apelido.eq.${email}`);
             
             if (searchError) {
-                console.error('Erro ao buscar usuário:', searchError);
+                console.error('❌ Erro na busca:', searchError);
                 throw searchError;
             }
             
-            console.log('Usuários encontrados:', users);
+            console.log('📋 Usuários encontrados:', users);
             
             if (!users || users.length === 0) {
+                console.log('❌ Nenhum usuário encontrado');
                 showAlert('E-mail/nickname não encontrado.', 'danger');
                 return false;
             }
             
-            // Verificar se alguma senha coincide
+            // Verificar se a senha coincide
             const user = users.find(u => u.senha_hash === hashedPassword);
             
             if (user) {
-                console.log('Login bem-sucedido para:', user.apelido);
+                console.log('✅ Login bem-sucedido:', user.apelido);
+                console.log('📊 Dados do usuário:', user);
                 
                 // Salvar dados do usuário no localStorage
                 localStorage.setItem('pokerUser', JSON.stringify(user));
                 
                 // Atualizar data do último login
-                await supabase
+                const { error: updateError } = await supabase
                     .from('usuarios')
                     .update({ ultimo_login: new Date().toISOString() })
                     .eq('id', user.id);
                 
-                // Redirecionar para a página inicial
-                showAlert('Login realizado com sucesso! Redirecionando...', 'success');
+                if (updateError) {
+                    console.warn('⚠️ Aviso: não foi possível atualizar último login:', updateError);
+                }
+                
+                showAlert('✅ Login realizado com sucesso! Redirecionando...', 'success');
                 
                 setTimeout(() => {
                     window.location.href = 'index.html';
@@ -318,17 +329,24 @@
                 
                 return true;
             } else {
-                console.log('Senha incorreta para usuário:', users[0].apelido);
-                console.log('Hash esperado:', users[0].senha_hash);
-                console.log('Hash fornecido:', hashedPassword);
+                console.log('❌ Senha incorreta');
+                console.log('🔐 Hash esperado:', users[0].senha_hash);
+                console.log('🔐 Hash fornecido:', hashedPassword);
+                console.log('🔐 Senha testada:', users.map(u => u.senha_hash));
                 
                 showAlert('Senha incorreta.', 'danger');
                 return false;
             }
             
         } catch (error) {
-            console.error('Erro completo ao fazer login:', error);
-            showAlert('Erro ao fazer login. Tente novamente.', 'danger');
+            console.error('❌ Erro completo no login:', error);
+            console.error('📋 Detalhes do erro:', {
+                message: error.message,
+                code: error.code,
+                details: error.details
+            });
+            
+            showAlert('Erro ao fazer login. Verifique o console para detalhes.', 'danger');
             return false;
         }
     }
@@ -365,15 +383,20 @@
     
     // Inicializar a aplicação quando a página carregar
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Página de login carregada');
+        
         // Verificar se já está logado
         const userData = localStorage.getItem('pokerUser');
         if (userData) {
+            console.log('ℹ️ Usuário já logado, redirecionando...');
             window.location.href = 'index.html';
             return;
         }
         
         // Inicializar Supabase
-        initializeSupabase();
+        if (initializeSupabase()) {
+            console.log('✅ Tudo inicializado, pronto para login');
+        }
     });
 </script>
 </body>
