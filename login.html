@@ -168,6 +168,21 @@
             color: #155724;
             border: 1px solid #c3e6cb;
         }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .config-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -177,6 +192,10 @@
         </div>
         
         <div class="auth-content">
+            <div id="configError" class="config-error" style="display: none;">
+                <strong>Erro de Configuração:</strong> Chave de API inválida. Verifique as configurações do Supabase.
+            </div>
+            
             <div id="alertBox" class="alert"></div>
             
             <form id="loginForm">
@@ -210,7 +229,7 @@
     // Variáveis globais
     let supabase = null;
     
-    // Credenciais do Supabase
+    // Credenciais do Supabase - ESTAS DEVEM SER ATUALIZADAS COM SUAS CREDENCIAIS REAIS
     const SUPABASE_URL = 'https://qrybzrbrevbwnsxkwejh.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhbmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzODU1ODUsImV4cCI6MjA3Mzk2MTU4NX0.uTtlJh2PxuxPL9ikMha699S7ZmXlZX8UZ1-gBRibkmk';
     
@@ -225,6 +244,12 @@
         setTimeout(() => {
             alertBox.style.display = 'none';
         }, 5000);
+    }
+    
+    // Mostrar erro de configuração
+    function showConfigError() {
+        document.getElementById('configError').style.display = 'block';
+        document.getElementById('loginButton').disabled = true;
     }
     
     // Alternar visibilidade da senha
@@ -246,12 +271,53 @@
     // Inicializar o Supabase
     function initializeSupabase() {
         try {
+            // Verificar se as credenciais estão presentes
+            if (!SUPABASE_URL || !SUPABASE_KEY || 
+                SUPABASE_URL.includes('sua-url') || 
+                SUPABASE_KEY.includes('sua-chave')) {
+                showConfigError();
+                showAlert('Configuração do Supabase não definida.', 'danger');
+                return false;
+            }
+            
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             console.log('✅ Supabase inicializado');
             return true;
         } catch (error) {
             console.error('❌ Erro ao inicializar Supabase:', error);
+            showConfigError();
             showAlert('Erro de configuração do sistema.', 'danger');
+            return false;
+        }
+    }
+    
+    // Verificar se o Supabase está configurado corretamente
+    async function testSupabaseConnection() {
+        try {
+            console.log('🔗 Testando conexão com Supabase...');
+            
+            // Tentar uma operação simples para testar a conexão
+            const { data, error } = await supabase.auth.getSession();
+            
+            if (error) {
+                console.error('❌ Erro na conexão:', error);
+                
+                if (error.message.includes('JWT')) {
+                    showConfigError();
+                    showAlert('Chave de API inválida. Verifique as configurações.', 'danger');
+                } else {
+                    showAlert('Erro de conexão com o servidor.', 'danger');
+                }
+                
+                return false;
+            }
+            
+            console.log('✅ Conexão bem-sucedida!');
+            return true;
+        } catch (error) {
+            console.error('❌ Erro ao testar conexão:', error);
+            showConfigError();
+            showAlert('Erro de conexão com o servidor.', 'danger');
             return false;
         }
     }
@@ -261,6 +327,12 @@
         try {
             console.log('🔑 Tentando login com:', email);
             
+            // Primeiro testar a conexão
+            const connectionOk = await testSupabaseConnection();
+            if (!connectionOk) {
+                return false;
+            }
+            
             // Fazer login usando Supabase Auth
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
@@ -269,7 +341,16 @@
             
             if (error) {
                 console.error('❌ Erro no login:', error);
-                showAlert(error.message, 'danger');
+                
+                // Mensagens de erro mais amigáveis
+                let errorMessage = error.message;
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'E-mail ou senha incorretos.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'E-mail não confirmado. Verifique sua caixa de entrada.';
+                }
+                
+                showAlert(errorMessage, 'danger');
                 return false;
             }
             
@@ -284,16 +365,32 @@
             
             if (userError) {
                 console.error('❌ Erro ao buscar dados do usuário:', userError);
-                showAlert('Login realizado, mas não foi possível carregar dados adicionais.', 'danger');
-                return false;
+                showAlert('Login realizado, mas não foi possível carregar dados adicionais.', 'warning');
+                
+                // Criar um perfil básico para o usuário se não existir
+                const { error: insertError } = await supabase
+                    .from('usuarios')
+                    .insert([
+                        { 
+                            id: data.user.id, 
+                            email: data.user.email,
+                            nome: data.user.email.split('@')[0],
+                            apelido: data.user.email.split('@')[0],
+                            data_criacao: new Date()
+                        }
+                    ]);
+                
+                if (insertError) {
+                    console.error('❌ Erro ao criar perfil do usuário:', insertError);
+                }
+            } else {
+                // Armazenar dados do usuário no localStorage
+                localStorage.setItem('pokerUser', JSON.stringify({
+                    id: data.user.id,
+                    email: data.user.email,
+                    ...userData
+                }));
             }
-            
-            // Armazenar dados do usuário no localStorage
-            localStorage.setItem('pokerUser', JSON.stringify({
-                id: data.user.id,
-                email: data.user.email,
-                ...userData
-            }));
             
             showAlert('Login realizado com sucesso! Redirecionando...', 'success');
             
@@ -361,7 +458,10 @@
         }
         
         // Inicializar Supabase
-        initializeSupabase();
+        if (initializeSupabase()) {
+            // Testar conexão em segundo plano
+            testSupabaseConnection();
+        }
     });
 </script>
 </body>
