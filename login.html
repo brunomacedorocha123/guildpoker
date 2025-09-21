@@ -181,8 +181,8 @@
             
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="loginEmail">E-mail ou Nickname</label>
-                    <input type="text" class="form-control" id="loginEmail" required>
+                    <label for="loginEmail">E-mail</label>
+                    <input type="email" class="form-control" id="loginEmail" required>
                 </div>
                 
                 <div class="form-group">
@@ -220,53 +220,11 @@
         alertBox.textContent = message;
         alertBox.className = `alert alert-${type}`;
         alertBox.style.display = 'block';
-    }
-    
-    // Testar conexão com Supabase
-    async function testSupabaseConnection() {
-        try {
-            console.log('🔗 Testando conexão com Supabase...');
-            
-            const { data, error } = await supabase
-                .from('usuarios')
-                .select('count')
-                .limit(1);
-            
-            if (error) {
-                console.error('❌ Erro na conexão:', error);
-                return false;
-            }
-            
-            console.log('✅ Conexão bem-sucedida!');
-            return true;
-        } catch (error) {
-            console.error('❌ Erro ao testar conexão:', error);
-            return false;
-        }
-    }
-    
-    // Verificar se as tabelas existem
-    async function checkTables() {
-        try {
-            console.log('📊 Verificando tabelas...');
-            
-            // Verificar se a tabela usuarios existe
-            const { data: usersData, error: usersError } = await supabase
-                .from('usuarios')
-                .select('id')
-                .limit(1);
-            
-            if (usersError) {
-                console.error('❌ Tabela usuarios não encontrada:', usersError);
-                return false;
-            }
-            
-            console.log('✅ Tabela usuarios encontrada');
-            return true;
-        } catch (error) {
-            console.error('❌ Erro ao verificar tabelas:', error);
-            return false;
-        }
+        
+        // Auto-esconder alertas após 5 segundos
+        setTimeout(() => {
+            alertBox.style.display = 'none';
+        }, 5000);
     }
     
     // Alternar visibilidade da senha
@@ -298,59 +256,57 @@
         }
     }
     
-    // Fazer login
+    // Fazer login usando Supabase Auth
     async function loginUser(email, password) {
         try {
             console.log('🔑 Tentando login com:', email);
             
-            // Primeiro: testar a conexão
-            const connectionOk = await testSupabaseConnection();
-            if (!connectionOk) {
-                showAlert('Erro de conexão com o banco de dados.', 'danger');
-                return false;
-            }
-            
-            // Verificar se tabelas existem
-            const tablesOk = await checkTables();
-            if (!tablesOk) {
-                showAlert('Problema com as tabelas do banco.', 'danger');
-                return false;
-            }
-            
-            // Buscar usuário
-            console.log('🔍 Buscando usuário...');
-            const { data: users, error: searchError } = await supabase
-                .from('usuarios')
-                .select('*')
-                .or(`email.eq.${email},apelido.eq.${email}`);
-            
-            if (searchError) {
-                console.error('❌ Erro na busca:', searchError);
-                showAlert('Erro ao buscar usuário.', 'danger');
-                return false;
-            }
-            
-            console.log('📋 Usuários encontrados:', users ? users.length : 0);
-            
-            if (!users || users.length === 0) {
-                showAlert('E-mail/nickname não encontrado.', 'danger');
-                return false;
-            }
-            
-            // Mostrar informações de debug
-            console.log('👤 Primeiro usuário encontrado:', {
-                id: users[0].id,
-                email: users[0].email,
-                apelido: users[0].apelido,
-                hash_length: users[0].senha_hash ? users[0].senha_hash.length : 'null'
+            // Fazer login usando Supabase Auth
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
             });
             
-            showAlert('Usuário encontrado! Verificando senha...', 'success');
+            if (error) {
+                console.error('❌ Erro no login:', error);
+                showAlert(error.message, 'danger');
+                return false;
+            }
+            
+            console.log('✅ Login bem-sucedido:', data.user.id);
+            
+            // Buscar dados adicionais do usuário na tabela 'usuarios'
+            const { data: userData, error: userError } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('id', data.user.id)
+                .single();
+            
+            if (userError) {
+                console.error('❌ Erro ao buscar dados do usuário:', userError);
+                showAlert('Login realizado, mas não foi possível carregar dados adicionais.', 'danger');
+                return false;
+            }
+            
+            // Armazenar dados do usuário no localStorage
+            localStorage.setItem('pokerUser', JSON.stringify({
+                id: data.user.id,
+                email: data.user.email,
+                ...userData
+            }));
+            
+            showAlert('Login realizado com sucesso! Redirecionando...', 'success');
+            
+            // Redirecionar após breve delay
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+            
             return true;
             
         } catch (error) {
             console.error('❌ Erro completo no login:', error);
-            showAlert('Erro ao fazer login. Verifique o console.', 'danger');
+            showAlert('Erro inesperado ao fazer login.', 'danger');
             return false;
         }
     }
@@ -364,7 +320,7 @@
         
         // Desativar botão para evitar múltiplos cliques
         loginButton.disabled = true;
-        loginButton.textContent = 'Testando...';
+        loginButton.textContent = 'Entrando...';
         
         // Obter dados do formulário
         const email = document.getElementById('loginEmail').value.trim();
