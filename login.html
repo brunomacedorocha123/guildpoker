@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ESTILOS SIMPLIFICADOS SÓ PARA O LOGIN */
         :root {
             --gold: #d4af37;
             --red: #8b0000;
@@ -15,7 +16,6 @@
             --dark-gray: #2c2c2c;
             --light-gray: #444;
             --text: #f1f1f1;
-            --parchment: #f5e6ca;
         }
         
         * {
@@ -28,57 +28,18 @@
         body {
             background-color: var(--black);
             color: var(--text);
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23222" width="100" height="100"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-        
-        /* Header Styles */
-        header {
-            background: linear-gradient(to bottom, var(--dark-red), var(--red));
-            border-bottom: 4px solid var(--gold);
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        }
-        
-        .logo-container {
-            display: flex;
-            align-items: center;
-        }
-        
-        .logo {
-            height: 60px;
-            width: auto;
-            margin-right: 15px;
-            filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
-        }
-        
-        .site-title {
-            font-family: 'Times New Roman', serif;
-            font-weight: bold;
-            font-size: 28px;
-            color: var(--gold);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-            letter-spacing: 1px;
-        }
-        
-        /* Main Content */
-        main {
-            flex: 1;
-            padding: 30px 5%;
-            display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23222" width="100" height="100"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
         }
         
         .auth-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             background: linear-gradient(to bottom right, var(--dark-gray), var(--light-gray));
             border: 2px solid var(--gold);
             border-radius: 10px;
@@ -96,7 +57,7 @@
         .auth-header h1 {
             color: var(--gold);
             font-family: 'Times New Roman', serif;
-            font-size: 28px;
+            font-size: 24px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
         
@@ -157,7 +118,6 @@
             font-weight: bold;
             transition: all 0.3s;
             font-size: 16px;
-            display: block;
             width: 100%;
         }
         
@@ -168,300 +128,253 @@
         
         .btn-primary:hover {
             background-color: #c19b2e;
-            transform: translateY(-2px);
-        }
-        
-        .btn-outline {
-            background-color: transparent;
-            border: 2px solid var(--gold);
-            color: var(--gold);
-            margin-top: 10px;
-        }
-        
-        .btn-outline:hover {
-            background-color: var(--gold);
-            color: var(--black);
-        }
-        
-        .form-text {
-            font-size: 14px;
-            color: #aaa;
-            margin-top: 5px;
         }
         
         .text-center {
             text-align: center;
         }
         
-        .login-links {
-            margin-top: 20px;
-            text-align: center;
+        .mt-3 {
+            margin-top: 15px;
         }
         
-        .login-links a {
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
             color: var(--gold);
             text-decoration: none;
-            margin: 0 10px;
         }
         
-        .login-links a:hover {
+        .back-link:hover {
             text-decoration: underline;
         }
         
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-        }
-        
-        .divider::before,
-        .divider::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background-color: #555;
-        }
-        
-        .divider span {
-            padding: 0 15px;
-            color: #aaa;
-            font-size: 14px;
-        }
-        
-        /* Loading Spinner */
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: var(--black);
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Footer */
-        footer {
-            background: linear-gradient(to bottom, var(--red), var(--dark-red));
-            border-top: 4px solid var(--gold);
-            padding: 40px 5% 20px;
-            margin-top: auto;
-        }
-        
-        .age-warning {
-            background-color: var(--dark-red);
-            border: 2px solid var(--gold);
-            border-radius: 8px;
+        .alert {
             padding: 15px;
-            text-align: center;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
+            border-radius: 5px;
+            display: none;
         }
         
-        .age-warning-icon {
-            font-size: 32px;
-            color: white;
-            background-color: var(--red);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
         
-        .age-warning-text {
-            font-size: 16px;
-            font-weight: bold;
-        }
-        
-        .age-warning-text span {
-            color: var(--gold);
-        }
-        
-        .copyright {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 14px;
-            color: #ccc;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .auth-content {
-                padding: 20px;
-            }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="logo-container">
-            <img src="logoguilpoker.png" alt="Guild Poker" class="logo">
-            <div class="site-title">GUILD POKER</div>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1><i class="fas fa-sign-in-alt"></i> Acessar Conta</h1>
         </div>
         
-        <nav>
-            <a href="index.html" class="btn btn-outline">Voltar ao Início</a>
-        </nav>
-    </header>
-    
-    <!-- Main Content -->
-    <main>
-        <div class="auth-container">
-            <div class="auth-header">
-                <h1><i class="fas fa-door-open"></i> Acessar a Guild</h1>
-            </div>
+        <div class="auth-content">
+            <div id="alertBox" class="alert"></div>
             
-            <div class="auth-content">
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="loginEmail">E-mail ou Nickname</label>
-                        <input type="text" class="form-control" id="loginEmail" required>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">E-mail ou Nickname</label>
+                    <input type="text" class="form-control" id="loginEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Senha</label>
+                    <div class="password-input">
+                        <input type="password" class="form-control" id="loginPassword" required>
+                        <span class="password-toggle" onclick="togglePassword('loginPassword')">
+                            <i class="fas fa-eye"></i>
+                        </span>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="loginPassword">Senha</label>
-                        <div class="password-input">
-                            <input type="password" class="form-control" id="loginPassword" required>
-                            <span class="password-toggle" onclick="togglePassword('loginPassword')">
-                                <i class="fas fa-eye"></i>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Entrar</button>
-                        <a href="cadastro.html" class="btn btn-outline">Criar Nova Conta</a>
-                    </div>
-                    
-                    <div class="login-links">
-                        <a href="#">Esqueci minha senha</a>
-                    </div>
-                </form>
-            </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="loginButton">Entrar</button>
+                
+                <div class="text-center mt-3">
+                    <p>Não tem uma conta? <a href="cadastro.html" style="color: var(--gold);">Cadastre-se aqui</a></p>
+                </div>
+            </form>
+            
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Voltar para a página inicial</a>
         </div>
-    </main>
-    
-    <!-- Footer -->
-    <footer>
-        <div class="age-warning">
-            <div class="age-warning-icon">18+</div>
-            <div class="age-warning-text">
-                <span>PROIBIDO PARA MENORES DE 18 ANOS</span> | Jogue com responsabilidade
-            </div>
-        </div>
-        
-        <div class="copyright">
-            &copy; 2023 Guild Poker - Todos os direitos reservados.
-        </div>
-    </footer>
+    </div>
 
     <script>
-        // Configuração do Supabase (use as mesmas credenciais da página de cadastro)
-        const SUPABASE_URL = 'https://qrybzrbrevbwnsxkwejh.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5ODUyNzcsImV4cCI6MjAyMzU2MTI3N30.5v3vRz3i8wLqF4LtJw4J8Jk8vQ7nZ7Z0Qxqj7J7Z7Z0';
-        
-        // Inicializar o Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // Alternar visibilidade da senha
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = input.nextElementSibling.querySelector('i');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
+    // Variáveis globais
+    let supabase = null;
+    
+    // Credenciais do Supabase
+    const SUPABASE_URL = 'https://qrybzrbrevbwnsxkwejh.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhbmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzODU1ODUsImV4cCI6MjA3Mzk2MTU4NX0.uTtlJh2PxuxPL9ikMha699S7ZmXlZX8UZ1-gBRibkmk';
+    
+    // Inicializar o Supabase
+    function initializeSupabase() {
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('Supabase inicializado com sucesso');
+            return true;
+        } catch (error) {
+            console.error('Erro ao inicializar Supabase:', error);
+            showAlert('Erro de configuração do sistema.', 'danger');
+            return false;
         }
+    }
+    
+    // Função para mostrar alertas
+    function showAlert(message, type) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.textContent = message;
+        alertBox.className = `alert alert-${type}`;
+        alertBox.style.display = 'block';
+    }
+    
+    // Alternar visibilidade da senha
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling.querySelector('i');
         
-        // Enviar formulário de login
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+    
+    // Função para fazer hash da senha (DEVE SER IDÊNTICA À DO CADASTRO)
+    async function hashPassword(password) {
+        // Converter a senha para ArrayBuffer
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        
+        // Fazer hash usando SHA-256
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        
+        // Converter ArrayBuffer para string hexadecimal
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        return hashHex;
+    }
+    
+    // Fazer login
+    async function loginUser(email, password) {
+        try {
+            console.log('Tentando fazer login com:', email);
             
-            // Obter elementos do DOM
-            const submitButton = this.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.textContent;
+            // Fazer hash da senha (EXATAMENTE IGUAL AO CADASTRO)
+            const hashedPassword = await hashPassword(password);
+            console.log('Hash da senha:', hashedPassword);
             
-            // Desativar botão para evitar múltiplos envios
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner"></span> Entrando...';
+            // Primeiro: buscar usuário por email ou apelido
+            const { data: users, error: searchError } = await supabase
+                .from('usuarios')
+                .select('*')
+                .or(`email.eq.${email},apelido.eq.${email}`);
             
-            // Coletar dados do formulário
-            const emailOrNickname = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            try {
-                // Verificar se é email ou nickname
-                const isEmail = emailOrNickname.includes('@');
-                
-                // Buscar usuário por email ou nickname
-                const { data: users, error: searchError } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq(isEmail ? 'email' : 'nickname', emailOrNickname);
-                
-                if (searchError) throw searchError;
-                
-                if (users.length === 0) {
-                    alert('Usuário não encontrado. Verifique suas credenciais.');
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalButtonText;
-                    return;
-                }
-                
-                const user = users[0];
-                
-                // Verificar senha (em produção, isso deve usar hashing!)
-                if (user.password === password) {
-                    // Login bem-sucedido
-                    alert(`Bem-vindo de volta, ${user.nickname}!`);
-                    
-                    // Salvar sessão do usuário
-                    localStorage.setItem('user', JSON.stringify(user));
-                    
-                    // Redirecionar para a página principal
-                    window.location.href = 'index.html';
-                } else {
-                    alert('Senha incorreta. Tente novamente.');
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalButtonText;
-                }
-                
-            } catch (error) {
-                console.error('Erro no login:', error);
-                alert('Erro ao fazer login. Tente novamente.');
-                
-                // Reativar botão
-                submitButton.disabled = false;
-                submitButton.textContent = originalButtonText;
+            if (searchError) {
+                console.error('Erro ao buscar usuário:', searchError);
+                throw searchError;
             }
-        });
-        
-        // Verificar se já está logado
-        document.addEventListener('DOMContentLoaded', function() {
-            const user = JSON.parse(localStorage.getItem('user'));
+            
+            console.log('Usuários encontrados:', users);
+            
+            if (!users || users.length === 0) {
+                showAlert('E-mail/nickname não encontrado.', 'danger');
+                return false;
+            }
+            
+            // Verificar se alguma senha coincide
+            const user = users.find(u => u.senha_hash === hashedPassword);
             
             if (user) {
-                // Se o usuário já está logado, redirecionar para a página principal
-                window.location.href = 'index.html';
+                console.log('Login bem-sucedido para:', user.apelido);
+                
+                // Salvar dados do usuário no localStorage
+                localStorage.setItem('pokerUser', JSON.stringify(user));
+                
+                // Atualizar data do último login
+                await supabase
+                    .from('usuarios')
+                    .update({ ultimo_login: new Date().toISOString() })
+                    .eq('id', user.id);
+                
+                // Redirecionar para a página inicial
+                showAlert('Login realizado com sucesso! Redirecionando...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+                
+                return true;
+            } else {
+                console.log('Senha incorreta para usuário:', users[0].apelido);
+                console.log('Hash esperado:', users[0].senha_hash);
+                console.log('Hash fornecido:', hashedPassword);
+                
+                showAlert('Senha incorreta.', 'danger');
+                return false;
             }
-        });
-    </script>
+            
+        } catch (error) {
+            console.error('Erro completo ao fazer login:', error);
+            showAlert('Erro ao fazer login. Tente novamente.', 'danger');
+            return false;
+        }
+    }
+    
+    // Event listener para o formulário de login
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const loginButton = document.getElementById('loginButton');
+        const originalButtonText = loginButton.textContent;
+        
+        // Desativar botão para evitar múltiplos cliques
+        loginButton.disabled = true;
+        loginButton.textContent = 'Entrando...';
+        
+        // Obter dados do formulário
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            showAlert('Por favor, preencha todos os campos.', 'danger');
+            loginButton.disabled = false;
+            loginButton.textContent = originalButtonText;
+            return;
+        }
+        
+        // Tentar fazer login
+        await loginUser(email, password);
+        
+        // Reativar botão
+        loginButton.disabled = false;
+        loginButton.textContent = originalButtonText;
+    });
+    
+    // Inicializar a aplicação quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar se já está logado
+        const userData = localStorage.getItem('pokerUser');
+        if (userData) {
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        // Inicializar Supabase
+        initializeSupabase();
+    });
+</script>
 </body>
 </html>
