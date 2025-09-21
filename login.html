@@ -214,25 +214,59 @@
     const SUPABASE_URL = 'https://qrybzrbrevbwnsxkwejh.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhbmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzODU1ODUsImV4cCI6MjA3Mzk2MTU4NX0.uTtlJh2PxuxPL9ikMha699S7ZmXlZX8UZ1-gBRibkmk';
     
-    // Inicializar o Supabase
-    function initializeSupabase() {
-        try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log('✅ Supabase inicializado com sucesso');
-            return true;
-        } catch (error) {
-            console.error('❌ Erro ao inicializar Supabase:', error);
-            showAlert('Erro de configuração do sistema.', 'danger');
-            return false;
-        }
-    }
-    
     // Função para mostrar alertas
     function showAlert(message, type) {
         const alertBox = document.getElementById('alertBox');
         alertBox.textContent = message;
         alertBox.className = `alert alert-${type}`;
         alertBox.style.display = 'block';
+    }
+    
+    // Testar conexão com Supabase
+    async function testSupabaseConnection() {
+        try {
+            console.log('🔗 Testando conexão com Supabase...');
+            
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('count')
+                .limit(1);
+            
+            if (error) {
+                console.error('❌ Erro na conexão:', error);
+                return false;
+            }
+            
+            console.log('✅ Conexão bem-sucedida!');
+            return true;
+        } catch (error) {
+            console.error('❌ Erro ao testar conexão:', error);
+            return false;
+        }
+    }
+    
+    // Verificar se as tabelas existem
+    async function checkTables() {
+        try {
+            console.log('📊 Verificando tabelas...');
+            
+            // Verificar se a tabela usuarios existe
+            const { data: usersData, error: usersError } = await supabase
+                .from('usuarios')
+                .select('id')
+                .limit(1);
+            
+            if (usersError) {
+                console.error('❌ Tabela usuarios não encontrada:', usersError);
+                return false;
+            }
+            
+            console.log('✅ Tabela usuarios encontrada');
+            return true;
+        } catch (error) {
+            console.error('❌ Erro ao verificar tabelas:', error);
+            return false;
+        }
     }
     
     // Alternar visibilidade da senha
@@ -251,25 +285,16 @@
         }
     }
     
-    // Função para fazer hash da senha (DEVE SER IDÊNTICA À DO CADASTRO)
-    async function hashPassword(password) {
+    // Inicializar o Supabase
+    function initializeSupabase() {
         try {
-            // Converter a senha para ArrayBuffer
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            
-            // Fazer hash usando SHA-256
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            
-            // Converter ArrayBuffer para string hexadecimal
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            console.log('🔐 Hash gerado:', hashHex);
-            return hashHex;
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('✅ Supabase inicializado');
+            return true;
         } catch (error) {
-            console.error('❌ Erro ao fazer hash da senha:', error);
-            throw error;
+            console.error('❌ Erro ao inicializar Supabase:', error);
+            showAlert('Erro de configuração do sistema.', 'danger');
+            return false;
         }
     }
     
@@ -278,11 +303,22 @@
         try {
             console.log('🔑 Tentando login com:', email);
             
-            // Fazer hash da senha
-            const hashedPassword = await hashPassword(password);
+            // Primeiro: testar a conexão
+            const connectionOk = await testSupabaseConnection();
+            if (!connectionOk) {
+                showAlert('Erro de conexão com o banco de dados.', 'danger');
+                return false;
+            }
             
-            // BUSCAR USUÁRIO no banco de dados
-            console.log('🔍 Buscando usuário no banco...');
+            // Verificar se tabelas existem
+            const tablesOk = await checkTables();
+            if (!tablesOk) {
+                showAlert('Problema com as tabelas do banco.', 'danger');
+                return false;
+            }
+            
+            // Buscar usuário
+            console.log('🔍 Buscando usuário...');
             const { data: users, error: searchError } = await supabase
                 .from('usuarios')
                 .select('*')
@@ -290,63 +326,31 @@
             
             if (searchError) {
                 console.error('❌ Erro na busca:', searchError);
-                throw searchError;
+                showAlert('Erro ao buscar usuário.', 'danger');
+                return false;
             }
             
-            console.log('📋 Usuários encontrados:', users);
+            console.log('📋 Usuários encontrados:', users ? users.length : 0);
             
             if (!users || users.length === 0) {
-                console.log('❌ Nenhum usuário encontrado');
                 showAlert('E-mail/nickname não encontrado.', 'danger');
                 return false;
             }
             
-            // Verificar se a senha coincide
-            const user = users.find(u => u.senha_hash === hashedPassword);
+            // Mostrar informações de debug
+            console.log('👤 Primeiro usuário encontrado:', {
+                id: users[0].id,
+                email: users[0].email,
+                apelido: users[0].apelido,
+                hash_length: users[0].senha_hash ? users[0].senha_hash.length : 'null'
+            });
             
-            if (user) {
-                console.log('✅ Login bem-sucedido:', user.apelido);
-                console.log('📊 Dados do usuário:', user);
-                
-                // Salvar dados do usuário no localStorage
-                localStorage.setItem('pokerUser', JSON.stringify(user));
-                
-                // Atualizar data do último login
-                const { error: updateError } = await supabase
-                    .from('usuarios')
-                    .update({ ultimo_login: new Date().toISOString() })
-                    .eq('id', user.id);
-                
-                if (updateError) {
-                    console.warn('⚠️ Aviso: não foi possível atualizar último login:', updateError);
-                }
-                
-                showAlert('✅ Login realizado com sucesso! Redirecionando...', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
-                
-                return true;
-            } else {
-                console.log('❌ Senha incorreta');
-                console.log('🔐 Hash esperado:', users[0].senha_hash);
-                console.log('🔐 Hash fornecido:', hashedPassword);
-                console.log('🔐 Senha testada:', users.map(u => u.senha_hash));
-                
-                showAlert('Senha incorreta.', 'danger');
-                return false;
-            }
+            showAlert('Usuário encontrado! Verificando senha...', 'success');
+            return true;
             
         } catch (error) {
             console.error('❌ Erro completo no login:', error);
-            console.error('📋 Detalhes do erro:', {
-                message: error.message,
-                code: error.code,
-                details: error.details
-            });
-            
-            showAlert('Erro ao fazer login. Verifique o console para detalhes.', 'danger');
+            showAlert('Erro ao fazer login. Verifique o console.', 'danger');
             return false;
         }
     }
@@ -360,7 +364,7 @@
         
         // Desativar botão para evitar múltiplos cliques
         loginButton.disabled = true;
-        loginButton.textContent = 'Entrando...';
+        loginButton.textContent = 'Testando...';
         
         // Obter dados do formulário
         const email = document.getElementById('loginEmail').value.trim();
@@ -368,6 +372,13 @@
         
         if (!email || !password) {
             showAlert('Por favor, preencha todos os campos.', 'danger');
+            loginButton.disabled = false;
+            loginButton.textContent = originalButtonText;
+            return;
+        }
+        
+        // Inicializar Supabase se necessário
+        if (!supabase && !initializeSupabase()) {
             loginButton.disabled = false;
             loginButton.textContent = originalButtonText;
             return;
@@ -394,9 +405,7 @@
         }
         
         // Inicializar Supabase
-        if (initializeSupabase()) {
-            console.log('✅ Tudo inicializado, pronto para login');
-        }
+        initializeSupabase();
     });
 </script>
 </body>
