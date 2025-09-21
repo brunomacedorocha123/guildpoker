@@ -571,9 +571,9 @@
     // Inicializar o Supabase com as credenciais do projeto
     function initializeSupabase() {
         try {
-            // Substitua estas variáveis pelas suas credenciais reais do Supabase
-            const SUPABASE_URL = 'https://seu-projeto.supabase.co';
-            const SUPABASE_KEY = 'sua-chave-anon-public';
+            // Credenciais do seu projeto Supabase
+            const SUPABASE_URL = 'https://qrybzrbrevbwnsxkwejh.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzODU1ODUsImV4cCI6MjA3Mzk2MTU4NX0.uTtlJh2PxuxPL9ikMha699S7ZmXlZX8UZ1-gBRibkmk';
             
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             console.log('Supabase inicializado com sucesso');
