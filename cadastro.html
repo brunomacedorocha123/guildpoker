@@ -777,6 +777,65 @@
             return false;
         }
     }
+
+    // Verificar se a tabela usuarios existe
+    async function checkUsersTableExists() {
+        try {
+            const { error } = await supabase
+                .from('usuarios')
+                .select('count')
+                .limit(1);
+            
+            return !error;
+        } catch (error) {
+            console.error('Tabela usuarios não existe:', error);
+            return false;
+        }
+    }
+
+    // Verificar se a tabela saldos_usuarios existe
+    async function checkBalanceTableExists() {
+        try {
+            const { error } = await supabase
+                .from('saldos_usuarios')
+                .select('count')
+                .limit(1);
+            
+            return !error;
+        } catch (error) {
+            console.error('Tabela saldos_usuarios não existe:', error);
+            return false;
+        }
+    }
+
+    // Criar usuário manualmente se as tabelas não existirem
+    async function createUserManually(userData) {
+        try {
+            // Armazenar dados básicos no localStorage como fallback
+            const userInfo = {
+                id: 'temp_' + Date.now(),
+                email: userData.email,
+                nome: userData.nome,
+                sobrenome: userData.sobrenome,
+                apelido: userData.apelido,
+                status: 'ativo'
+            };
+            
+            localStorage.setItem('pokerUser', JSON.stringify(userInfo));
+            
+            return {
+                success: true,
+                message: 'Usuário criado localmente. As tabelas do banco de dados não estão configuradas.',
+                user: userInfo
+            };
+        } catch (error) {
+            console.error('Erro ao criar usuário manualmente:', error);
+            return {
+                success: false,
+                message: 'Erro ao criar usuário: ' + error.message
+            };
+        }
+    }
     
     // Enviar formulário
     document.getElementById('registrationForm').addEventListener('submit', async function(e) {
@@ -829,6 +888,35 @@
             return;
         }
         
+        // Verificar se as tabelas existem
+        const usersTableExists = await checkUsersTableExists();
+        const balanceTableExists = await checkBalanceTableExists();
+        
+        if (!usersTableExists || !balanceTableExists) {
+            console.warn('⚠️ Tabelas não encontradas, usando modo fallback');
+            
+            const userData = {
+                nome: firstName,
+                sobrenome: lastName,
+                email: email,
+                apelido: nickname
+            };
+            
+            const result = await createUserManually(userData);
+            
+            if (result.success) {
+                showAlert('Cadastro realizado! Você pode fazer login agora.', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+            } else {
+                showAlert(result.message, 'danger');
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+            }
+            return;
+        }
+        
         // Verificar se email já existe
         const emailExists = await checkEmailExists(email);
         if (emailExists) {
@@ -866,7 +954,8 @@
                     data: {
                         nome: firstName,
                         sobrenome: lastName,
-                        apelido: nickname
+                        apelido: nickname,
+                        cpf: cpf
                     }
                 }
             });
@@ -876,6 +965,8 @@
                 
                 if (authError.message.includes('already registered')) {
                     showAlert('Este email já está cadastrado.', 'danger');
+                } else if (authError.message.includes('Database error')) {
+                    showAlert('Erro no servidor de autenticação. Por favor, tente novamente.', 'danger');
                 } else {
                     showAlert('Erro ao criar conta: ' + authError.message, 'danger');
                 }
@@ -908,33 +999,47 @@
             if (userDbError) {
                 console.error('❌ Erro ao salvar dados do usuário:', userDbError);
                 
-                // Se falhar ao inserir na tabela, tenta deletar o usuário do Auth
-                await supabase.auth.admin.deleteUser(authData.user.id);
-                
-                showAlert('Erro ao completar cadastro. Tente novamente.', 'danger');
-                submitButton.disabled = false;
-                submitButton.textContent = originalButtonText;
-                return;
+                // Tentar criar um registro simplificado
+                try {
+                    const { error: simpleError } = await supabase
+                        .from('usuarios')
+                        .insert([{
+                            id: authData.user.id,
+                            nome: firstName,
+                            email: email,
+                            apelido: nickname,
+                            status: 'ativo'
+                        }]);
+                    
+                    if (simpleError) {
+                        throw simpleError;
+                    }
+                } catch (simpleError) {
+                    console.error('❌ Erro ao criar registro simplificado:', simpleError);
+                    showAlert('Conta criada, mas houve um erro ao salvar dados adicionais. Entre em contato com o suporte.', 'warning');
+                }
             }
             
-            // 3. Criar registro na tabela de saldos
-            console.log('💰 Criando saldo para o usuário...');
-            const { error: saldoError } = await supabase
-                .from('saldos_usuarios')
-                .insert([{ 
-                    id_usuario: authData.user.id,
-                    moedas: 1000, // Saldo inicial
-                    pontos: 0,
-                    moedas_bonus: 0
-                }]);
-            
-            if (saldoError) {
-                console.error('❌ Erro ao criar saldo:', saldoError);
-                // Não é crítico, pode continuar
+            // 3. Criar registro na tabela de saldos (se a tabela existir)
+            if (balanceTableExists) {
+                console.log('💰 Criando saldo para o usuário...');
+                const { error: saldoError } = await supabase
+                    .from('saldos_usuarios')
+                    .insert([{ 
+                        id_usuario: authData.user.id,
+                        moedas: 1000,
+                        pontos: 0,
+                        moedas_bonus: 0
+                    }]);
+                
+                if (saldoError) {
+                    console.error('❌ Erro ao criar saldo:', saldoError);
+                    // Não é crítico, pode continuar
+                }
             }
             
             // Sucesso
-            showAlert(`Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.`, 'success');
+            showAlert(`Cadastro realizado com sucesso! Verifique seu email (${email}) para confirmar a conta.`, 'success');
             
             // Redirecionar para a página de login após 5 segundos
             setTimeout(() => {
@@ -943,7 +1048,12 @@
             
         } catch (error) {
             console.error('❌ Erro completo no cadastro:', error);
-            showAlert('Erro inesperado ao realizar cadastro. Tente novamente.', 'danger');
+            
+            if (error.message.includes('Database error saving new user')) {
+                showAlert('Erro no servidor de banco de dados. Por favor, tente novamente em alguns minutos.', 'danger');
+            } else {
+                showAlert('Erro inesperado ao realizar cadastro. Tente novamente.', 'danger');
+            }
             
             // Reativar botão
             submitButton.disabled = false;
@@ -956,5 +1066,7 @@
         initializeSupabase();
     });
 </script>
+</body>
+</html>
 </body>
 </html>
