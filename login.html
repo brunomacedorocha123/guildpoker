@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ESTILOS SIMPLIFICADOS SÓ PARA O LOGIN */
         :root {
             --gold: #d4af37;
             --red: #8b0000;
@@ -183,6 +182,16 @@
             margin-bottom: 20px;
             border: 1px solid #f5c6cb;
         }
+        
+        .debug-info {
+            background-color: #2c2c2c;
+            color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 12px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -193,7 +202,7 @@
         
         <div class="auth-content">
             <div id="configError" class="config-error" style="display: none;">
-                <strong>Erro de Configuração:</strong> Chave de API inválida. Verifique as configurações do Supabase.
+                <strong>Erro de Configuração:</strong> <span id="configErrorText"></span>
             </div>
             
             <div id="alertBox" class="alert"></div>
@@ -222,6 +231,11 @@
             </form>
             
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Voltar para a página inicial</a>
+            
+            <div id="debugInfo" class="debug-info">
+                <strong>Informações de Debug:</strong>
+                <div id="debugContent"></div>
+            </div>
         </div>
     </div>
 
@@ -229,9 +243,9 @@
     // Variáveis globais
     let supabase = null;
     
-    // Credenciais do Supabase - ESTAS DEVEM SER ATUALIZADAS COM SUAS CREDENCIAIS REAIS
+    // Credenciais do Supabase - SUAS CREDENCIAIS
     const SUPABASE_URL = 'https://qrybzrbrevbwnsxkwejh.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhbmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzODU1ODUsImV4cCI6MjA3Mzk2MTU4NX0.uTtlJh2PxuxPL9ikMha699S7ZmXlZX8UZ1-gBRibkmk';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyeWJ6cmJyZXZid25zeGt3ZWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzODU1ODUsImV4cCI6MjA3Mzk2MTU4NX0.uTtlJh2PxuxPL9ikMha699S7ZmXlZX8UZ1-gBRibkmk';
     
     // Função para mostrar alertas
     function showAlert(message, type) {
@@ -240,14 +254,22 @@
         alertBox.className = `alert alert-${type}`;
         alertBox.style.display = 'block';
         
-        // Auto-esconder alertas após 5 segundos
         setTimeout(() => {
             alertBox.style.display = 'none';
         }, 5000);
     }
     
+    // Mostrar informações de debug
+    function showDebugInfo(info) {
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+        debugContent.innerHTML = info;
+        debugInfo.style.display = 'block';
+    }
+    
     // Mostrar erro de configuração
-    function showConfigError() {
+    function showConfigError(message) {
+        document.getElementById('configErrorText').textContent = message;
         document.getElementById('configError').style.display = 'block';
         document.getElementById('loginButton').disabled = true;
     }
@@ -271,22 +293,16 @@
     // Inicializar o Supabase
     function initializeSupabase() {
         try {
-            // Verificar se as credenciais estão presentes
-            if (!SUPABASE_URL || !SUPABASE_KEY || 
-                SUPABASE_URL.includes('sua-url') || 
-                SUPABASE_KEY.includes('sua-chave')) {
-                showConfigError();
-                showAlert('Configuração do Supabase não definida.', 'danger');
-                return false;
-            }
+            console.log('🔧 Inicializando Supabase...');
+            console.log('URL:', SUPABASE_URL);
+            console.log('Key:', SUPABASE_KEY.substring(0, 20) + '...');
             
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             console.log('✅ Supabase inicializado');
             return true;
         } catch (error) {
             console.error('❌ Erro ao inicializar Supabase:', error);
-            showConfigError();
-            showAlert('Erro de configuração do sistema.', 'danger');
+            showConfigError('Erro ao conectar com o servidor: ' + error.message);
             return false;
         }
     }
@@ -296,19 +312,42 @@
         try {
             console.log('🔗 Testando conexão com Supabase...');
             
-            // Tentar uma operação simples para testar a conexão
-            const { data, error } = await supabase.auth.getSession();
+            // Testar a conexão de várias formas
+            const tests = [
+                supabase.auth.getSession(),
+                supabase.from('usuarios').select('count').limit(1),
+                supabase.rpc('version')
+            ];
             
-            if (error) {
-                console.error('❌ Erro na conexão:', error);
+            let connectionOk = false;
+            let errorMessage = '';
+            
+            for (const test of tests) {
+                try {
+                    const { data, error } = await test;
+                    if (!error) {
+                        connectionOk = true;
+                        break;
+                    } else {
+                        errorMessage = error.message;
+                    }
+                } catch (e) {
+                    errorMessage = e.message;
+                }
+            }
+            
+            if (!connectionOk) {
+                console.error('❌ Erro na conexão:', errorMessage);
                 
-                if (error.message.includes('JWT')) {
-                    showConfigError();
-                    showAlert('Chave de API inválida. Verifique as configurações.', 'danger');
+                if (errorMessage.includes('JWT') || errorMessage.includes('API key')) {
+                    showConfigError('Chave de API inválida. Verifique as configurações do Supabase.');
+                } else if (errorMessage.includes('Network')) {
+                    showConfigError('Erro de rede. Verifique sua conexão com a internet.');
                 } else {
-                    showAlert('Erro de conexão com o servidor.', 'danger');
+                    showConfigError('Erro de conexão: ' + errorMessage);
                 }
                 
+                showDebugInfo(`URL: ${SUPABASE_URL}<br>Key: ${SUPABASE_KEY.substring(0, 20)}...<br>Erro: ${errorMessage}`);
                 return false;
             }
             
@@ -316,8 +355,33 @@
             return true;
         } catch (error) {
             console.error('❌ Erro ao testar conexão:', error);
-            showConfigError();
-            showAlert('Erro de conexão com o servidor.', 'danger');
+            showConfigError('Erro inesperado: ' + error.message);
+            return false;
+        }
+    }
+    
+    // Verificar se Email Auth está habilitado
+    async function checkEmailAuthEnabled() {
+        try {
+            // Tentar criar um usuário de teste (será bloqueado se não estiver habilitado)
+            const { error } = await supabase.auth.signUp({
+                email: 'test@example.com',
+                password: 'testpassword123',
+            });
+            
+            // Se o erro for específico sobre email não confirmado, significa que o auth está funcionando
+            if (error && error.message.includes('email already registered')) {
+                return true;
+            }
+            
+            if (error && !error.message.includes('Email not confirmed')) {
+                console.warn('⚠️ Email Auth pode não estar habilitado:', error.message);
+                showAlert('Sistema de autenticação pode não estar configurado corretamente.', 'warning');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Erro ao verificar Email Auth:', error);
             return false;
         }
     }
@@ -333,6 +397,9 @@
                 return false;
             }
             
+            // Verificar se Email Auth está habilitado
+            await checkEmailAuthEnabled();
+            
             // Fazer login usando Supabase Auth
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
@@ -342,12 +409,13 @@
             if (error) {
                 console.error('❌ Erro no login:', error);
                 
-                // Mensagens de erro mais amigáveis
                 let errorMessage = error.message;
                 if (error.message.includes('Invalid login credentials')) {
                     errorMessage = 'E-mail ou senha incorretos.';
                 } else if (error.message.includes('Email not confirmed')) {
                     errorMessage = 'E-mail não confirmado. Verifique sua caixa de entrada.';
+                } else if (error.message.includes('User not found')) {
+                    errorMessage = 'Usuário não encontrado.';
                 }
                 
                 showAlert(errorMessage, 'danger');
@@ -356,45 +424,27 @@
             
             console.log('✅ Login bem-sucedido:', data.user.id);
             
-            // Buscar dados adicionais do usuário na tabela 'usuarios'
-            const { data: userData, error: userError } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('id', data.user.id)
-                .single();
-            
-            if (userError) {
-                console.error('❌ Erro ao buscar dados do usuário:', userError);
-                showAlert('Login realizado, mas não foi possível carregar dados adicionais.', 'warning');
-                
-                // Criar um perfil básico para o usuário se não existir
-                const { error: insertError } = await supabase
+            // Tentar buscar dados adicionais do usuário
+            try {
+                const { data: userData, error: userError } = await supabase
                     .from('usuarios')
-                    .insert([
-                        { 
-                            id: data.user.id, 
-                            email: data.user.email,
-                            nome: data.user.email.split('@')[0],
-                            apelido: data.user.email.split('@')[0],
-                            data_criacao: new Date()
-                        }
-                    ]);
+                    .select('*')
+                    .eq('id', data.user.id)
+                    .single();
                 
-                if (insertError) {
-                    console.error('❌ Erro ao criar perfil do usuário:', insertError);
+                if (!userError) {
+                    localStorage.setItem('pokerUser', JSON.stringify({
+                        id: data.user.id,
+                        email: data.user.email,
+                        ...userData
+                    }));
                 }
-            } else {
-                // Armazenar dados do usuário no localStorage
-                localStorage.setItem('pokerUser', JSON.stringify({
-                    id: data.user.id,
-                    email: data.user.email,
-                    ...userData
-                }));
+            } catch (dbError) {
+                console.log('ℹ️ Tabela usuarios não encontrada, continuando sem dados adicionais');
             }
             
             showAlert('Login realizado com sucesso! Redirecionando...', 'success');
             
-            // Redirecionar após breve delay
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 1500);
@@ -403,7 +453,7 @@
             
         } catch (error) {
             console.error('❌ Erro completo no login:', error);
-            showAlert('Erro inesperado ao fazer login.', 'danger');
+            showAlert('Erro inesperado ao fazer login: ' + error.message, 'danger');
             return false;
         }
     }
@@ -415,11 +465,9 @@
         const loginButton = document.getElementById('loginButton');
         const originalButtonText = loginButton.textContent;
         
-        // Desativar botão para evitar múltiplos cliques
         loginButton.disabled = true;
         loginButton.textContent = 'Entrando...';
         
-        // Obter dados do formulário
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         
@@ -430,17 +478,14 @@
             return;
         }
         
-        // Inicializar Supabase se necessário
         if (!supabase && !initializeSupabase()) {
             loginButton.disabled = false;
             loginButton.textContent = originalButtonText;
             return;
         }
         
-        // Tentar fazer login
         await loginUser(email, password);
         
-        // Reativar botão
         loginButton.disabled = false;
         loginButton.textContent = originalButtonText;
     });
@@ -449,7 +494,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🚀 Página de login carregada');
         
-        // Verificar se já está logado
         const userData = localStorage.getItem('pokerUser');
         if (userData) {
             console.log('ℹ️ Usuário já logado, redirecionando...');
@@ -457,9 +501,7 @@
             return;
         }
         
-        // Inicializar Supabase
         if (initializeSupabase()) {
-            // Testar conexão em segundo plano
             testSupabaseConnection();
         }
     });
